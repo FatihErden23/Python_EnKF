@@ -37,6 +37,7 @@ GO_params = [TCH, TSV, RD]
 # Time Simulation parameters
 N_step = 20000
 dt = 0.001
+
 # Initial conditions for the synchronous machine
 Pt = 0.8
 Qt = 0.3
@@ -44,7 +45,7 @@ V0 = 1.0
 
 V = np.ones(N_step)*V0
 
-# Fault scenario at t=0.1s, duration is 0.05s, 40% reduction in V
+# Fault scenario at t=0.1s, duration is 0.05s, 70% reduction in V
 V[500:600] = 0.3
 
 theta = np.zeros(N_step)

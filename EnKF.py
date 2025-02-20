@@ -22,7 +22,7 @@ class EnKF(object):
         self.dim_z = dim_z  # equals to 2 (P,Q)
         self.dt = dt  # delta time
         self.N = N  # number of ensemble
-        self.WPE_fx = fx  # state transition function, note that this function is only for the states. the transition function for the parameters are identity.
+        self.fx = fx  # state transition function, note that this function is only for the states. the transition function for the parameters are identity.
         self.K = zeros((dim_x, dim_z))
         self.z = array([[None] * self.dim_z]).T
         self.S = zeros((dim_z, dim_z))  # system uncertainty
@@ -72,7 +72,7 @@ class EnKF(object):
         for i, s in enumerate(self.sigmas):
             filename = 'snap/ensemble_' + str(i)
             basecase_name = 'snap/ensemble_' + str(i)
-            self.sigmas_h[i], self.sigmas[i] = self.WPE_fx(s, self.dt, filename, self.last_time_instant,
+            self.sigmas_h[i], self.sigmas[i] = self.fx(s, self.dt, filename, self.last_time_instant,
                                                           self.con_param_index, basecase_name)
 
         e = multivariate_normal(self._mean, self.Q, N)
