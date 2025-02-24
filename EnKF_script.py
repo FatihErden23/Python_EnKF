@@ -2,9 +2,10 @@
 
 # IMPORT MODULES
 import numpy as np
-from model_functions import network_solver, model_init2, fx
+from model_functions import network_solver, model_init2, fx, parameter_update
 from EnKF import EnKF
 import matplotlib.pyplot as plt
+import pandas as pd
 
 # Synchoronous machine model parameters (Kundur's model)
 Tdo = 8.0
@@ -59,13 +60,14 @@ x0, y, u, KE = model_init2(Pt, Qt, V0, SM_params, EX_params)
 EX_params[1] = KE
 print("Pe: ", y[4], "-- Qe: ", y[5])
 
-# Change one of the synchronous machine parameters, then calibrate it.
+# Change one of the synchronous machine parameters, this will be calibrated.
 SM_params[6] = 3.0
 
 # Initial conditions for the EnKF
 p_states = 0.01  # initial state error covariance /0.01
 p_param  = 0.01 # initial parameter error covariance /0.01
 starting_time = 500 # start the estimation after 500 steps of simulation
+N = 100 # number of ensemble members
 
 last_time_instant = starting_time*dt
 
@@ -83,11 +85,17 @@ for i in range(starting_time):
     x = fx(x, u, y, SM_params, EX_params, GO_params, dt)
     y = network_solver(Vnow, thetanow, x, y, SM_params)
 
-# Ensemble Kalman Filter Section
-
+# ENSEMBLE KALMAN FILTER SECTION
 # Append the parameter to be estimated to the state vector
 x = np.append(x, SM_params[6])
 covariance_matrix = np.identity(len(x))*p_states
 covariance_matrix[-1, -1] = p_param
 
-# TOBECONTINUED
+# Prepare the measurements.
+meas = pd.read_csv("meas.csv")
+meas = meas.to_numpy()
+
+t_meas = meas[starting_time:N_step,0]
+P_meas = meas[starting_time:N_step,5]
+Q_meas = meas[starting_time:N_step,6]
+

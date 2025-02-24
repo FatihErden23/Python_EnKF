@@ -244,3 +244,30 @@ def plotter(data_hist,index,name, time_vector):
     #plt.show()
     plt.savefig(name + '.png')
     return
+
+def parameter_update(x, idx ,SM_params, EX_params, GOV_params):
+    # Update the parameters of the synchronous machine model (single parameter case)
+    # x         : Parameter vector
+    # idx       : Indexes of the parameter and machine submodel to be updated
+    # SM_params : Synchoronous machine model parameters
+    # EX_params : IEEE DC1A Exciter model parameters
+    # GOV_params: IEEE TGOV1 Turbine Governor model parameters
+
+    param = x[-1]
+
+    model, param_idx = idx
+
+    match model:
+        case 1:
+            SM_params[param_idx] = param
+        case 2:
+            EX_params[param_idx] = param
+        case 3:
+            GOV_params[param_idx] = param
+    
+    return SM_params, EX_params, GOV_params
+
+
+
+    
+    
