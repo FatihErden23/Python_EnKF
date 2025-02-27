@@ -267,7 +267,40 @@ def parameter_update(x, idx ,SM_params, EX_params, GOV_params):
     
     return SM_params, EX_params, GOV_params
 
+def enkf_fx(V,theta, x, y, u, SM_params, EX_params, GO_params, dt):
+    # Calculate the state derivatives and update the state and observation
+    # vector for the next time step
 
+    # V         : Voltage magnitude at POI
+    # theta     : Voltage angle at POI
+    # x         : State vector
+    # y         : Algebraic variables vector
+    # u         : Input vector
+    # SM_params : Synchoronous machine model parameters
+    # EX_params : IEEE DC1A Exciter model parameters
+    # GO_params : IEEE TGOV1 Turbine Governor model parameters
+    # dt        : Time step
 
+    num_param = 1
+    # Obtain the model states and calibration parameters from x
+    x = x[:-1-num_param]
+
+    # Update the model parameter for given ensemble member
+    SM_params, EX_params, GO_params = parameter_update(x, (1,6), SM_params, EX_params, GO_params)
+
+    # Calculate the new state prediction
+    x = fx(x, u, y, SM_params, EX_params, GO_params, dt)
+
+    # Calculate the algebraic variables
+    y = network_solver(V, theta, x, y, SM_params)
+
+    # Obtain the observation vector from y: Pe,Qe
+    h = np.array([y[4], y[5]])
+
+    # Append the parameters to the state vector
+    idx = 6
+    x = np.append(x, SM_params[idx])
+
+    return h,x
     
-    
+

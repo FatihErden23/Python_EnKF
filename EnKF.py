@@ -12,8 +12,8 @@ from filterpy.common import outer_product_sum
 
 
 class EnKF(object):
-
-    def __init__(self, x, P, dim_z, dt, N, fx, filename, last_time_instant, con_param_index):
+    """EnKF for Python synchronous machine model"""
+    def __init__(self, x, P, dim_z, dt, N, fx, last_time_instant, SM_params, EX_params, GO_params):
 
         # initialization of ensemble kalman filter
 
@@ -22,7 +22,8 @@ class EnKF(object):
         self.dim_z = dim_z  # equals to 2 (P,Q)
         self.dt = dt  # delta time
         self.N = N  # number of ensemble
-        self.fx = fx  # state transition function, note that this function is only for the states. the transition function for the parameters are identity.
+        self.fx = fx  # state transition function, note that this function is only for the states. 
+                        # the transition function for the parameters are identity.
         self.K = zeros((dim_x, dim_z))
         self.z = array([[None] * self.dim_z]).T
         self.S = zeros((dim_z, dim_z))  # system uncertainty
@@ -37,17 +38,18 @@ class EnKF(object):
         self._mean = zeros(dim_x)
         self._mean_z = zeros(dim_z)
 
-        self.filename = filename  # last time instant dynamics snapshot file.
         self.last_time_instant = last_time_instant  # last time instant
-        self.con_param_index = con_param_index  # indexes of parameters to be estimated
+        self.SM_params = SM_params  # synchronous machine parameters
+        self.EX_params = EX_params  # exciter parameters
+        self.GO_params = GO_params  # governor parameters
 
     def initialize(self, x, P):
 
         if x.ndim != 1:
             raise ValueError('x must be a 1D array')
 
-        self.sigmas = multivariate_normal(mean=x, cov=P,
-                                          size=self.N)  # create sigma values of mean x, covariance P and size (state_number x N)
+        self.sigmas = multivariate_normal(mean=x, cov=P, size=self.N)  # create sigma values
+                                        # of mean x, covariance P and size (state_number x N)
 
         self.x = x
         self.P = P
@@ -60,7 +62,7 @@ class EnKF(object):
         self.x_post = self.x.copy()
         self.P_post = self.P.copy()
 
-    def predict(self):
+    def predict(self, V, theta, u):
         """ Predict next position. """
         # Transition k --> k+1
 
@@ -70,10 +72,8 @@ class EnKF(object):
         # The sigma values are transitioned into the next time instant
         # with the help of WPE_fx function. This is done sequentially for every sigma (every state vector).
         for i, s in enumerate(self.sigmas):
-            filename = 'snap/ensemble_' + str(i)
-            basecase_name = 'snap/ensemble_' + str(i)
-            self.sigmas_h[i], self.sigmas[i] = self.fx(s, self.dt, filename, self.last_time_instant,
-                                                          self.con_param_index, basecase_name)
+            self.sigmas_h[i], self.sigmas[i] = self.fx(V, theta, self.sigmas[i], self.sigmas_h[i], u,
+                                                        self.SM_params, self.EX_params, self.GO_params, self.dt)
 
         e = multivariate_normal(self._mean, self.Q, N)
         self.sigmas += e
@@ -122,8 +122,8 @@ class EnKF(object):
             self.sigmas[i] += dot(self.K, z + e_r[i] - sigmas_h[i])
 
         # Take the mean or median of the states.
-        # self.x = np.mean(self.sigmas, axis=0)
-        self.x = np.nanmedian(self.sigmas, axis=0)
+        self.x = np.mean(self.sigmas, axis=0)
+        #self.x = np.nanmedian(self.sigmas, axis=0)
 
         self.P = self.P - dot(dot(self.K, self.S), self.K.T)
 
