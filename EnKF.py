@@ -13,13 +13,14 @@ from filterpy.common import outer_product_sum
 
 class EnKF(object):
     """EnKF for Python synchronous machine model"""
-    def __init__(self, x, P, dim_z, dt, N, fx, last_time_instant, SM_params, EX_params, GO_params):
+    def __init__(self, x,y, P, dim_z, dt, N, fx, last_time_instant, SM_params, EX_params, GO_params):
 
         # initialization of ensemble kalman filter
 
         dim_x = len(x)
         self.dim_x = dim_x  # equals to total state number
         self.dim_z = dim_z  # equals to 2 (P,Q)
+        self.dim_y = len(y)  # equals to total algebraic variable number
         self.dt = dt  # delta time
         self.N = N  # number of ensemble
         self.fx = fx  # state transition function, note that this function is only for the states. 
@@ -29,7 +30,7 @@ class EnKF(object):
         self.S = zeros((dim_z, dim_z))  # system uncertainty
         self.SI = zeros((dim_z, dim_z))  # inverse system uncertainty
 
-        self.initialize(x, P)
+        self.initialize(x,y, P)
 
         self.Q = eye(dim_x) * 0.000001  # process uncertainty
         self.R = eye(dim_z) * 0.0001  # measurement uncertainty 
@@ -43,7 +44,7 @@ class EnKF(object):
         self.EX_params = EX_params  # exciter parameters
         self.GO_params = GO_params  # governor parameters
 
-    def initialize(self, x, P):
+    def initialize(self, x,y, P):
 
         if x.ndim != 1:
             raise ValueError('x must be a 1D array')
@@ -51,6 +52,9 @@ class EnKF(object):
         self.sigmas = multivariate_normal(mean=x, cov=P, size=self.N)  # create sigma values
                                         # of mean x, covariance P and size (state_number x N)
 
+        p_y = 0.0001
+        self.sigmas_y = multivariate_normal(mean=y, cov=np.identity(self.dim_y)*p_y, size=self.N)  # create sigma values
+                                        # of mean y, covariance 0 and size (algebraic_variable_number x N)
         self.x = x
         self.P = P
 
@@ -72,7 +76,7 @@ class EnKF(object):
         # The sigma values are transitioned into the next time instant
         # with the help of WPE_fx function. This is done sequentially for every sigma (every state vector).
         for i, s in enumerate(self.sigmas):
-            self.sigmas_h[i], self.sigmas[i] = self.fx(V, theta, self.sigmas[i], self.sigmas_h[i], u,
+            self.sigmas_h[i], self.sigmas[i], self.sigmas_y[i] = self.fx(V, theta, self.sigmas[i], self.sigmas_y[i], u,
                                                         self.SM_params, self.EX_params, self.GO_params, self.dt)
 
         e = multivariate_normal(self._mean, self.Q, N)

@@ -6,6 +6,7 @@ from model_functions import network_solver, model_init2, fx, enkf_fx
 from EnKF import EnKF
 import matplotlib.pyplot as plt
 import pandas as pd
+import time
 
 # Synchoronous machine model parameters (Kundur's model)
 Tdo = 8.0
@@ -103,7 +104,7 @@ P_meas = meas[starting_time:N_step,5]
 Q_meas = meas[starting_time:N_step,6]
 
 # Construct the EnKF object
-enkf = EnKF(x, covariance_matrix, 2, dt, N, enkf_fx, last_time_instant, SM_params, EX_params, GO_params)
+enkf = EnKF(x,y, covariance_matrix, 2, dt, N, enkf_fx, last_time_instant, SM_params, EX_params, GO_params)
 z = np.zeros((2))
 
 # Calibration loop
@@ -114,7 +115,7 @@ for t in range(starting_time, N_step):
     meas_time = t_meas[t+1]
 
     # predict the states
-    enkf.predict(V[t+1], theta[t+1], u)
+    enkf.predict(V[t], theta[t], u)
 
     # update the states
     enkf.update(z)
@@ -122,10 +123,10 @@ for t in range(starting_time, N_step):
     # Record the state and output vectors.
 
     # Take the updated parameter value to the history, also print it.
-    process_time = t*dt
+    process_time = (t+starting_time+1)*dt
     p_hist[t] = enkf.x[-1]
-    print("Process_t: ", process_time, " -- meas_t:", meas_time, " -- Parameter: ", enkf.x[-1])
-
+    print("Process_t: %4f -- meas_t: %4f -- Parameter: %7f" % (process_time,meas_time,enkf.x[-1]))
+    time.sleep(1)
 print("Calibration process completed.")
 
 # Plotting sequence GELICEK
