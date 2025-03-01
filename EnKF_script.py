@@ -7,6 +7,7 @@ from EnKF import EnKF
 import matplotlib.pyplot as plt
 import pandas as pd
 import time
+import openpyxl
 
 # Synchoronous machine model parameters (Kundur's model)
 Tdo = 8.0
@@ -63,13 +64,13 @@ EX_params[1] = KE
 print("Initially, Pe: ", y[4], "-- Qe: ", y[5])
 
 # Change one of the synchronous machine parameters, this will be calibrated.
-SM_params[6] = 3.0
+SM_params[6] = 4.0
 
 # Initial conditions for the EnKF
-p_states = 0.01  # initial state error covariance /0.01
-p_param  = 0.01 # initial parameter error covariance /0.01
+p_states = 1  # initial state error covariance /0.01
+p_param  = 1 # initial parameter error covariance /0.01
 starting_time = 500 # start the estimation after 500 steps of simulation
-N = 100 # number of ensemble members
+N = 20 # number of ensemble members
 
 last_time_instant = starting_time*dt
 
@@ -112,7 +113,7 @@ z = np.zeros((2))
 # Calibration loop
 for t in range(starting_time, N_step):
     # get the measurements
-    z[0] = P_meas[t+1] # t de olabilir
+    z[0] = P_meas[t+1]
     z[1] = Q_meas[t+1]
     meas_time = t_meas[t+1]
 
@@ -129,15 +130,15 @@ for t in range(starting_time, N_step):
     # Take the updated parameter value to the history, also print it.
     process_time[t] = enkf.last_time_instant
     p_hist[t] = enkf.x[-1]
-    print("Process_t: %4f -- meas_t: %4f -- Parameter: %7f" % (process_time,meas_time,enkf.x[-1]))
+    print("Process_t: %4f -- meas_t: %4f -- Parameter: %7f" % (process_time[t],meas_time,enkf.x[-1]))
     time.sleep(0.25)
 print("Calibration process completed.")
 
 # Save the results in pandas format
-column_names = ['time','Eq','Ed','delta','w','Efd','VF','VR','TM','Psv','parameter'
+column_names = ['time','Eq','Ed','delta','w','Efd','VF','VR','TM','Psv','parameter',
                 'Vd','Vq','Id','Iq','Pe','Qe']
-time = meas[:,0]
-results = pd.DataFrame(data = [time, x_hist,y_hist], columns = column_names)
-results.to_excel("results\results.xlsx")
+result_data = np.concatenate((process_time, x_hist, p_hist, y_hist), axis = 1)
+results = pd.DataFrame(data = result_data, columns = column_names)
+results.to_excel("results.xlsx")
 
 # Plotting sequence
