@@ -37,7 +37,7 @@ RD = 0.05
 GO_params = [TCH, TSV, RD]
 
 # Time Simulation parameters
-N_step = 20000
+N_step = 2000
 dt = 0.001
 
 # Initial conditions for the synchronous machine
@@ -78,6 +78,7 @@ x = x0
 x_hist = np.zeros((N_step, len(x0)))
 y_hist = np.zeros((N_step, len(y)))
 p_hist = np.zeros((N_step, 1))
+process_time = np.zeros((N_step, 1))
 
 for i in range(starting_time):
     Vnow = V[i]
@@ -88,6 +89,7 @@ for i in range(starting_time):
     # Check whether the exciter and governor are disabled or not (in the functions).
     x = fx(x, u, y, SM_params, EX_params, GO_params, dt)
     y = network_solver(Vnow, thetanow, x, y, SM_params)
+    process_time[i] = i*dt
 
 # ENSEMBLE KALMAN FILTER SECTION
 # Append the parameter to be estimated to the state vector
@@ -99,9 +101,9 @@ covariance_matrix[-1, -1] = p_param
 meas = pd.read_csv("meas.csv")
 meas = meas.to_numpy()
 
-t_meas = meas[starting_time:N_step,0]
-P_meas = meas[starting_time:N_step,5]
-Q_meas = meas[starting_time:N_step,6]
+t_meas = meas[:,0]
+P_meas = meas[:,5]
+Q_meas = meas[:,6]
 
 # Construct the EnKF object
 enkf = EnKF(x,y, covariance_matrix, 2, dt, N, enkf_fx, last_time_instant, SM_params, EX_params, GO_params)
@@ -120,13 +122,22 @@ for t in range(starting_time, N_step):
     # update the states
     enkf.update(z)
 
-    # Record the state and output vectors.
+    # Record the state and y vectors.
+    x_hist[t, :] = enkf.x[:-1]
+    y_hist[t, :] = enkf.y
 
     # Take the updated parameter value to the history, also print it.
-    process_time = (t+starting_time+1)*dt
+    process_time[t] = enkf.last_time_instant
     p_hist[t] = enkf.x[-1]
     print("Process_t: %4f -- meas_t: %4f -- Parameter: %7f" % (process_time,meas_time,enkf.x[-1]))
-    time.sleep(1)
+    time.sleep(0.25)
 print("Calibration process completed.")
 
-# Plotting sequence GELICEK
+# Save the results in pandas format
+column_names = ['time','Eq','Ed','delta','w','Efd','VF','VR','TM','Psv','parameter'
+                'Vd','Vq','Id','Iq','Pe','Qe']
+time = meas[:,0]
+results = pd.DataFrame(data = [time, x_hist,y_hist], columns = column_names)
+results.to_excel("results\results.xlsx")
+
+# Plotting sequence

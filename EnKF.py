@@ -57,6 +57,7 @@ class EnKF(object):
                                         # of mean y, covariance 0 and size (algebraic_variable_number x N)
         self.x = x
         self.P = P
+        self.y = y
 
         # these will always be a copy of x,P after predict() is called
         self.x_prior = self.x.copy()
@@ -128,6 +129,11 @@ class EnKF(object):
         # Take the mean or median of the states.
         self.x = np.mean(self.sigmas, axis=0)
         #self.x = np.nanmedian(self.sigmas, axis=0)
+        self.y = np.mean(self.sigmas_y, axis=0)
+        #self.y = np.nanmedian(self.sigmas_y, axis=0)
+
+        # Update the last time instant
+        self.last_time_instant += self.dt
 
         self.P = self.P - dot(dot(self.K, self.S), self.K.T)
 
