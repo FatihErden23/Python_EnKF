@@ -151,10 +151,10 @@ def fx(states, u, y, SM_params, EX_params, GO_params, dt):
     gov_disable = False
     if gov_disable:
         states[7] = TM
+        states[8] = Psv
     else:
         states[7] += dTM * dt
-    
-    states[8] += dPsv * dt
+        states[8] += dPsv * dt
 
     return states
 

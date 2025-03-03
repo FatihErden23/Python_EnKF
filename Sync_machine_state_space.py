@@ -35,7 +35,7 @@ RD = 0.05
 GO_params = [TCH, TSV, RD]
 
 # Time Simulation parameters
-N_step = 20000
+N_step = 100000
 dt = 0.001
 
 # Initial conditions for the synchronous machine
@@ -93,10 +93,10 @@ sub2.set_title('Reactive Power (pu)')
 sub2.set_xlabel('Time (s)')
 
 fig.tight_layout()
-fig.savefig('sync_machine_state_space.png')
+fig.savefig('results/sync_machine_state_space.png')
 
 # plot state variable to check
-plotter(x_hist, 3, 'asdw', time_vector)
+plotter(x_hist, 3, 'results/asdw', time_vector)
 
 time_vector = time_vector.reshape((1, len(time_vector)))
 y_hist_new = np.concatenate((time_vector.T,y_hist), axis=1)
@@ -104,6 +104,6 @@ y_hist_new = np.concatenate((time_vector.T,y_hist), axis=1)
 columnsy = ['time','Vd', 'Vq', 'Id', 'Iq', 'Pe', 'Qe']
 columnsx = ['Eq1', 'Ed1', 'delta', 'w', 'Efd', 'VF', 'VR', 'TM', 'Psv']
 dfy = pd.DataFrame(data=y_hist_new, columns=columnsy)
-dfy.to_csv('sync_machine_state_space_outputs.csv', index=False)
+dfy.to_csv('results/sync_machine_state_space_outputs.csv', index=False)
 dfx = pd.DataFrame(data=x_hist, columns=columnsx)
-dfx.to_csv('sync_machine_state_space_states.csv', index=False)
+dfx.to_csv('results/sync_machine_state_space_states.csv', index=False)

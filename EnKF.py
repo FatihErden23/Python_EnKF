@@ -32,8 +32,8 @@ class EnKF(object):
 
         self.initialize(x,y, P)
 
-        self.Q = eye(dim_x) * 0.000001  # process uncertainty
-        self.R = eye(dim_z) * 0.0001  # measurement uncertainty 
+        self.Q = eye(dim_x) * 0.00000001  # process uncertainty
+        self.R = eye(dim_z) * 0.00001  # measurement uncertainty 
         self.inv = np.linalg.inv
 
         self._mean = zeros(dim_x)
@@ -52,7 +52,7 @@ class EnKF(object):
         self.sigmas = multivariate_normal(mean=x, cov=P, size=self.N)  # create sigma values
                                         # of mean x, covariance P and size (state_number x N)
 
-        p_y = 0.0001
+        p_y = 0.00001
         self.sigmas_y = multivariate_normal(mean=y, cov=np.identity(self.dim_y)*p_y, size=self.N)  # create sigma values
                                         # of mean y, covariance 0 and size (algebraic_variable_number x N)
         self.x = x
@@ -102,8 +102,8 @@ class EnKF(object):
 
         if R is None:
             R = self.R
-            self.R[0,0] = 0.00001 # P_meas uncertainty
-            self.R[1,1] = 0.00001 #Q_meas uncertainty
+            self.R[0,0] = 0.001 # P_meas uncertainty
+            self.R[1,1] = 0.001 #Q_meas uncertainty
         if np.isscalar(R):
             R = eye(self.dim_z) * R
 
