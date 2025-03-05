@@ -68,7 +68,7 @@ SM_params[6] = 4.5
 
 # Initial conditions for the EnKF
 p_states = 0.01  # initial state error covariance /0.01
-p_param  = 1 # initial parameter error covariance /0.01
+p_param  = 1 # initial parameter error covariance /1
 starting_time = 500 # start the estimation after 500 steps of simulation
 N = 300 # number of ensemble members
 
