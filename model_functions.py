@@ -1,5 +1,5 @@
 # This file contains the functions that are used to calculate the network equations and 
-# the state derivatives for the synchronous machine, exciter, and governor models.
+# the state derivatives for the synchronous machine, exciter, and governor models. by Fatih Erden
 import numpy as np
 import matplotlib.pyplot as plt
 
