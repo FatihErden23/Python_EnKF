@@ -64,7 +64,7 @@ EX_params[1] = KE
 print("Initially, Pe: ", y[4], "-- Qe: ", y[5])
 
 # Change one of the synchronous machine parameters, this will be calibrated.
-SM_params[6] = 4.5
+SM_params[6] = 8.0
 
 # Initial conditions for the EnKF
 p_states = 0.01  # initial state error covariance /0.01

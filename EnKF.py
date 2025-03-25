@@ -32,8 +32,8 @@ class EnKF(object):
 
         self.initialize(x,y, P)
 
-        self.Q = eye(dim_x) * 0.000000001  # process uncertainty /0.00000001  emin ol
-        self.R = eye(dim_z) * 0.01  # measurement uncertainty /0.00001 çalıştığına
+        self.Q = eye(dim_x) * 0.000000001  # process uncertainty /0.000000001 most
+        self.R = eye(dim_z) * 0.01  # measurement uncertainty /0.01 successful
         self.inv = np.linalg.inv
 
         self._mean = zeros(dim_x)
